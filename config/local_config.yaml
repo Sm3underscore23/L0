@@ -1,0 +1,23 @@
+---
+http:
+  host: localhost
+  port: 8080
+cache:
+  limit: 10
+  recover_limit: 5
+logger:
+  log_level: debug
+postgres:
+  host: localhost
+  port: 5432
+  db_name: taskL0DB
+  user: admin
+  sslmode: disable
+  migrations_dir: migrations
+kafka:
+  consumer_group: my-consumer-group
+  broker_list:
+    - localhost:9092
+  topic: order-topic
+  workers_num: 10
+...

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Order Information</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2rem; }
+        .section { margin-bottom: 2rem; border: 1px solid #ddd; padding: 1rem; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 0.75rem; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #f8f9fa; }
+        .back-link { display: inline-block; margin-top: 1rem; padding: 0.5rem 1rem; background: #007bff; color: white; text-decoration: none; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Order Information</h1>
+    
+    <div class="section">
+        <h2>Basic Information</h2>
+        <table>
+            <tr><th>Order UID</th><td><%= order.order_uid %></td></tr>
+            <tr><th>Track Number</th><td><%= order.track_number %></td></tr>
+            <tr><th>Entry</th><td><%= order.entry %></td></tr>
+            <tr><th>Locale</th><td><%= order.locale %></td></tr>
+            <tr><th>Internal Signature</th><td><%= order.internal_signature %></td></tr>
+            <tr><th>Customer ID</th><td><%= order.customer_id %></td></tr>
+            <tr><th>Delivery Service</th><td><%= order.delivery_service %></td></tr>
+            <tr><th>Shard Key</th><td><%= order.shardkey %></td></tr>
+            <tr><th>SM ID</th><td><%= order.sm_id %></td></tr>
+            <tr><th>Date Created</th><td><%= order.date_created %></td></tr>
+            <tr><th>OOF Shard</th><td><%= order.oof_shard %></td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Delivery Information</h2>
+        <table>
+            <tr><th>Name</th><td><%= order.delivery.name %></td></tr>
+            <tr><th>Phone</th><td><%= order.delivery.phone %></td></tr>
+            <tr><th>Zip</th><td><%= order.delivery.zip %></td></tr>
+            <tr><th>City</th><td><%= order.delivery.city %></td></tr>
+            <tr><th>Address</th><td><%= order.delivery.address %></td></tr>
+            <tr><th>Region</th><td><%= order.delivery.region %></td></tr>
+            <tr><th>Email</th><td><%= order.delivery.email %></td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Payment Information</h2>
+        <table>
+            <tr><th>Transaction</th><td><%= order.payment.transaction %></td></tr>
+            <tr><th>Request ID</th><td><%= order.payment.request_id %></td></tr>
+            <tr><th>Currency</th><td><%= order.payment.currency %></td></tr>
+            <tr><th>Provider</th><td><%= order.payment.provider %></td></tr>
+            <tr><th>Amount</th><td><%= order.payment.amount %></td></tr>
+            <tr><th>Payment DT</th><td><%= order.payment.payment_dt %></td></tr>
+            <tr><th>Bank</th><td><%= order.payment.bank %></td></tr>
+            <tr><th>Delivery Cost</th><td><%= order.payment.delivery_cost %></td></tr>
+            <tr><th>Goods Total</th><td><%= order.payment.goods_total %></td></tr>
+            <tr><th>Custom Fee</th><td><%= order.payment.custom_fee %></td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Items (<%= order.items.length %>)</h2>
+        <% order.items.forEach((item, index) => { %>
+        <h3>Item <%= index + 1 %></h3>
+        <table>
+            <tr><th>CHRT ID</th><td><%= item.chrt_id %></td></tr>
+            <tr><th>Track Number</th><td><%= item.track_number %></td></tr>
+            <tr><th>Price</th><td><%= item.price %></td></tr>
+            <tr><th>RID</th><td><%= item.rid %></td></tr>
+            <tr><th>Name</th><td><%= item.name %></td></tr>
+            <tr><th>Sale</th><td><%= item.sale %></td></tr>
+            <tr><th>Size</th><td><%= item.size %></td></tr>
+            <tr><th>Total Price</th><td><%= item.total_price %></td></tr>
+            <tr><th>NM ID</th><td><%= item.nm_id %></td></tr>
+            <tr><th>Brand</th><td><%= item.brand %></td></tr>
+            <tr><th>Status</th><td><%= item.status %></td></tr>
+        </table>
+        <% }) %>
+    </div>
+
+    <a href="/" class="back-link">New Search</a>
+</body>
+</html>

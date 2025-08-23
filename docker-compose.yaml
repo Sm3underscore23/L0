@@ -1,0 +1,55 @@
+---
+x-db-environment: &x-db-environment
+  POSTGRES_HOST: "localhost"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "taskL0DB"
+  POSTGRES_USER: "admin"
+  POSTGRES_PASSWORD: ${DB_PASSWORD}
+  POSTGRES_SSL_MODE: "disable"
+
+x-kafka-environment: &x-kafka-environment
+  KAFKA_ADVERTISED_HOST_NAME: "localhost"
+  KAFKA_ADVERTISED_PORT: "9092"
+  KAFKA_ZOOKEEPER_CONNECT: "zookeaper:2181"
+  KAFKA_CREATE_TOPICS: "order-topic:1:1"
+
+services:
+  db:
+    container_name: db
+    image: postgres:17-alpine
+    environment:
+      <<: *x-db-environment
+    ports:
+      - "5432:5432"
+    networks:
+      - app_network
+  
+  zookeaper:
+    image: wurstmeister/zookeeper
+    container_name: example-zookeaper
+    ports:
+        - "2181:2181"
+    networks:
+      - app_network
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    hostname: kafka
+    ports:
+        - "9092:9092"
+    links:
+        - zookeaper
+    environment:
+      <<: *x-kafka-environment
+    depends_on:
+        - zookeaper
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    external: false
+
+volumes:
+  db_data:
+...

@@ -1,0 +1,23 @@
+---
+http:
+  host: 0.0.0.0
+  port: 8080
+cache:
+  limit: 10
+  recover_limit: 10
+logger:
+  log_level: debug
+postgres:
+  host: db
+  port: 5432
+  db_name: taskL0DB
+  user: admin
+  sslmode: disable
+  migrations_dir: migrations
+kafka:
+  consumer_group: my-consumer-group
+  broker_list:
+    - kafka:9093
+  topic: order-topic
+  workers_num: 10
+...

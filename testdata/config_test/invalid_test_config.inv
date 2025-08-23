@@ -1,0 +1,22 @@
+---
+http:
+  host: testhost_server
+  port: 1
+cache:
+  limit: 1
+  recover_limit: 1
+logger:
+  log_level: test_level
+postgres:
+  host: testhost_db
+  port: 1
+  db_name: test_name
+  user: test_user
+  sslmode: test_mode
+  migrations_dir: test_dir
+kafka:
+  consumer_group: test_consumer_group
+  broker_list:
+    - localhost:9092
+  topic: test_topic
+...
