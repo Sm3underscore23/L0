@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS items (
     rid TEXT NOT NULL,
     name VARCHAR(64) NOT NULL,
     sale BIGINT NOT NULL,
-    size TEXT,
+    size TEXT NOT NULL,
     total_price BIGINT NOT NULL,
     nm_id BIGINT NOT NULL,
     brand VARCHAR(64) NOT NULL,

@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS delivery (
     zip VARCHAR(9) NOT NULL,
     city VARCHAR(64) NOT NULL,
     address VARCHAR(128) NOT NULL,
-    region VARCHAR(64),
+    region VARCHAR(64) NOT NULL,
     email VARCHAR(128) NOT NULL
 );
 -- +goose StatementEnd
