@@ -94,34 +94,50 @@ make compose-down
 make run
 ```
 
-### Frontend веб-интерфейса:
-Для запука frontend веб-интерфейса перейдите в папку interface и запустите:
+#### Frontend веб-интерфейс:
+Для запука frontend веб-интерфейса перейдите в папку interface:
+```bash
+cd interface/
+```
+
+И запустите:
 ```bash
 npm install
 API_BASE_URL=http://your-backend-url node server.js
 ```
-Где _your-backend-url_ - host:port backend части (example: localhost:8080)
+
+Где:
+
+ _your-backend-url_ - host:port backend части (example: localhost:8080)
 
 #### Test_producer:
-Для запука тестового producer для генерации заказов перейдите в папку test_producer и запустите:
+Для запука тестового producer для генерации заказов перейдите в папку test_producer:
+```bash
+cd test_producer/
+```
+
+И запустите:
 ```bash
 go mod download
 go run cmd/main.go -config-path your_config_path -order-num ordernum
 ```
+
 Где:
+
 _your_config_path_ - путь до конфига с информацией о Kafka (example: config/local_config.yaml)
+
 _ordernum_ - количество заказов для генерации и отправки (example: 10)
 
 ## Основные маршруты API
 ### Backend
-/v1/order/find_order/{order_id} - 
+/v1/order/find_order/{order_id} - получение информации о заказе
 
-/v1/test/get_cache - 
+/v1/test/get_cache - получение текущего состояния кеша
 
 ### Frontend
-/find-order - 
+/find-order - форма для поиска заказа
 
-/order/{order_id} - 
+/order/{order_id} - отображение заказа
 
 ---
 ## Архитектура и реализация
@@ -147,9 +163,10 @@ _ordernum_ - количество заказов для генерации и о
 **`internal/`** - Внутренние пакеты основного приложения**
 
 **`internal/app/app.go`** - Инициализация зависимостей (Dependency Injection)
-- Создание логгера, подключение к БД, Kafka, кэшу
+- Создание логгера, валидатора, кэша
+- Подключение к БД, Kafka
 - Инициализация репозиториев, use cases, контроллеров
-- Запуск HTTP сервера и потребителей Kafka
+- Запуск HTTP сервера и Kafka consumer group
 - Graceful shutdown
 
 **`internal/config/`** - Конфигурация приложения
@@ -158,7 +175,7 @@ _ordernum_ - количество заказов для генерации и о
 **`internal/controller/http/`** - HTTP контроллеры**
 - `v1/` - API v1 endpoints
   - `get_order_info.go` - получение информации о заказе
-  - `get_cache.go` - получение кэшированных данных
+  - `get_cache.go` - получение текущего состояния кеша
   - `middleware/logger.go` - middleware для логирования
 - `router.go` - маршрутизация запросов
 
@@ -172,16 +189,16 @@ _ordernum_ - количество заказов для генерации и о
 - `order/` - реализация репозитория заказов
   - `create.go` - создание заказа
   - `get.go` - получение заказа по ID
-  - `get_lasts.go` - получение последних заказов
+  - `get_lasts.go` - получение последних N заказов
   - `is_exists.go` - проверка существования заказа
 
 **`internal/usecase/`** - Бизнес-логика**
 - `contracts.go` - интерфейсы use cases
+- `cache-loader/` - прогрев кэша
 - `order/` - реализация бизнес-логики заказов
   - `get_info.go` - получение информации о заказе
-  - `get_cache.go` - работа с кэшем
+  - `get_cache.go` - получение текущего состояния кеша
   - `handle_order.go` - обработка входящих заказов
-- `cache-loader/` - прогрев кэша
 
 **`pkg/`** - Переиспользуемые пакеты**
 
@@ -190,17 +207,17 @@ _ordernum_ - количество заказов для генерации и о
 - `options.go` - конфигурационные опции
 
 **`pkg/kafka/consumer/`** - Kafka consumer с worker pool**
-- `consumer.go` - основной потребитель
-- `handler.go` - обработчики сообщений
+- `consumer.go` - инициализация consumer group
+- `handler.go` - обработчики consumer group
 - `wp.go` - пул воркеров
-- `options.go` - конфигурация
+- `options.go` - конфигурация consumer group
 
 **`pkg/postgres/`** - PostgreSQL клиент с миграциями**
 - `postgres.go` - подключение к БД
 - `migrate.go` - применение миграций
 - `options.go` - конфигурация
 
-**`pkg/logger/`** - Логгер (обертка для zap/slog)**
+**`pkg/logger/`** - Логгер (обертка для log/slog)**
 
 **`interface/`** - Веб-интерфейс на Node.js**
 - `server.js` - Express.js сервер
@@ -209,7 +226,6 @@ _ordernum_ - количество заказов для генерации и о
 
 **`test_producer/`** - Тестовый продюсер заказов**
 - Генерация тестовых заказов в Kafka
-- Отдельный Go модуль
 
 **`migrations/`** - Миграции базы данных**
 - `001_orders.sql` - таблица заказов
@@ -226,12 +242,110 @@ _ordernum_ - количество заказов для генерации и о
 **`docker-compose.yaml`** - Основной compose файл**
 - PostgreSQL, Kafka, Zookeeper
 
-**`app.docker-compose.yaml`** - Запуск приложения**
-- Основное приложение, PostgreSQL, Kafka, Zookeeper
+**`app.docker-compose.yaml`** - compose файл с backend приложением**
+- Backend приложение, PostgreSQL, Kafka, Zookeeper
 
 ## Валидация
 
+### Валидация обязательных полей (required)
 
+На первом этапе проверяется наличие всех обязательных полей в JSON-структуре заказа.
+Используется библиотека `go-playground/validator`.
+
+**Правила:**
+
+* Для заказа (`OrderInfo`):
+  `order_uid`, `track_number`, `entry`, `delivery`, `payment`, `items`,
+  `locale`, `customer_id`, `delivery_service`, `shardkey`, `sm_id`,
+  `date_created`, `oof_shard`.
+* Для блока доставки (`Delivery`):
+  `name`, `phone`, `zip`, `city`, `address`, `region`, `email`.
+* Для блока оплаты (`Payment`):
+  `transaction`, `currency`, `provider`, `amount`, `payment_dt`,
+  `bank`, `delivery_cost`, `goods_total`, `custom_fee`.
+* Для элементов заказа (`Item`):
+  `chrt_id`, `track_number`, `price`, `rid`, `name`, `sale`,
+  `size`, `total_price`, `nm_id`, `brand`, `status`.
+
+Если хотя бы одно обязательное поле отсутствует — заказ отклоняется.
+
+---
+
+### Бизнес-валидация
+
+После проверки на обязательность выполняются проверки согласованности данных.
+
+**Основные правила:**
+
+* `order_uid` должен совпадать с `payment.transaction`.
+* Для каждого товара `item.track_number` совпадает с `order.track_number`.
+* Цена товара:
+
+  * `total_price == price - sale`;
+  * `total_price ≥ 0`.
+  * При `total_price = 0` фиксируется предупреждение (лог).
+* Цена заказа:
+
+  * `sum(items.total_price) == payment.goods_total`;
+  * `payment.amount == custom_fee + delivery_cost + goods_total`.
+  * При `goods_total = 0` фиксируется предупреждение (лог).
+
+Если одно из правил нарушено — заказ считается некорректным и отклоняется.
+
+### Таблица ограничений по размерам данных
+
+Финальный уровень валидации обеспечивается ограничениями схемы БД.
+
+**Основные правила:**
+
+| Таблица      | Поле                 | Тип / Ограничение | Назначение / комментарий                   |
+| ------------ | -------------------- | ----------------- | ------------------------------------------ |
+| **orders**   | `order_uid`          | `VARCHAR(36)`     | Уникальный идентификатор заказа (UUID).    |
+|              | `track_number`       | `VARCHAR(36)`     | Уникальный номер отслеживания.             |
+|              | `entry`              | `VARCHAR(32)`     | Сервис/точка входа заказа.                 |
+|              | `locale`             | `VARCHAR(16)`     | Язык (например, `en`, `ru`).               |
+|              | `internal_signature` | `TEXT`            | Внутренняя подпись, произвольная длина.    |
+|              | `customer_id`        | `VARCHAR(64)`     | Идентификатор клиента.                     |
+|              | `delivery_service`   | `VARCHAR(64)`     | Служба доставки.                           |
+|              | `shardkey`           | `VARCHAR(16)`     | Ключ шардирования.                         |
+|              | `oof_shard`          | `VARCHAR(16)`     | Доп. шардирование.                         |
+|              | `sm_id`              | `BIGINT`          | Идентификатор магазина.                    |
+|              | `date_created`       | `TIMESTAMP`       | Дата создания заказа.                      |
+| **delivery** | `name`               | `VARCHAR(64)`     | ФИО получателя.                            |
+|              | `phone`              | `VARCHAR(19)`     | Телефон в международном формате.           |
+|              | `zip`                | `VARCHAR(9)`      | Почтовый индекс.                           |
+|              | `city`               | `VARCHAR(64)`     | Город.                                     |
+|              | `address`            | `VARCHAR(128)`    | Адрес доставки.                            |
+|              | `region`             | `VARCHAR(64)`     | Регион.                                    |
+|              | `email`              | `VARCHAR(128)`    | Электронная почта.                         |
+| **payments** | `transaction`        | `VARCHAR(36)`     | Уникальный ID транзакции.                  |
+|              | `request_id`         | `TEXT`            | Внутренний ID запроса, произвольная длина. |
+|              | `currency`           | `VARCHAR(3)`      | Валюта (ISO 4217).                         |
+|              | `provider`           | `VARCHAR(16)`     | Платежный провайдер.                       |
+|              | `bank`               | `VARCHAR(64)`     | Банк.                                      |
+|              | `amount`             | `BIGINT`          | Общая сумма.                               |
+|              | `payment_dt`         | `BIGINT`          | Временная метка платежа (Unix timestamp).  |
+|              | `delivery_cost`      | `BIGINT`          | Стоимость доставки.                        |
+|              | `goods_total`        | `BIGINT`          | Сумма товаров.                             |
+|              | `custom_fee`         | `BIGINT`          | Дополнительные комиссии.                   |
+| **items**    | `id`                 | `SERIAL`          | Уникальный идентификатор записи.           |
+|              | `track_number`       | `VARCHAR(36)`     | Привязка к заказу.                         |
+|              | `chrt_id`            | `BIGINT`          | ID товара.                                 |
+|              | `price`              | `BIGINT`          | Цена товара.                               |
+|              | `rid`                | `TEXT`            | Уникальный идентификатор позиции.          |
+|              | `name`               | `VARCHAR(64)`     | Наименование товара.                       |
+|              | `sale`               | `BIGINT`          | Скидка.                                    |
+|              | `size`               | `TEXT`            | Размер (произвольный).                     |
+|              | `total_price`        | `BIGINT`          | Итоговая цена товара.                      |
+|              | `nm_id`              | `BIGINT`          | Внутренний идентификатор WB.               |
+|              | `brand`              | `VARCHAR(64)`     | Бренд.                                     |
+|              | `status`             | `BIGINT`          | Статус позиции. 
+
+Все поля NOT NULL.
+
+Если одно из ограничний нарушено — заказ считается некорректным и отклоняется.
+
+---
 
 ## Тестирование
 
@@ -240,9 +354,3 @@ _ordernum_ - количество заказов для генерации и о
 ```bash
 make test
 ```
-
-## 
-
-### Валидация
-
-См. docs/validation.md
