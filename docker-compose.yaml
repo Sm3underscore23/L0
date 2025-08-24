@@ -26,7 +26,7 @@ services:
   
   zookeaper:
     image: wurstmeister/zookeeper
-    container_name: example-zookeaper
+    container_name: zookeaper
     ports:
         - "2181:2181"
     networks:

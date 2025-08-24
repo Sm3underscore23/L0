@@ -24,6 +24,5 @@ FROM alpine:3.21
 COPY --from=builder /app/config/docker_config.yaml /config/
 COPY --from=builder /app/migrations /migrations
 COPY --from=builder /bin/app /app
-COPY /template /template
 
 CMD ["/app", "-config-path=config/docker_config.yaml"]
